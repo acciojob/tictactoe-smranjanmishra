@@ -1,66 +1,120 @@
-let player1, player2, currentPlayer;
-let gameBoard = ['', '', '', '', '', '', '', '', ''];
-const winCombos = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-    [0, 4, 8], [2, 4, 6] // Diagonals
-];
+// Write your script here
 
-document.getElementById('submit').addEventListener('click', startGame);
+const form = document.querySelector("#inputs");
+const gridsContainer = document.querySelector("#grids");
+const message = document.querySelector(".message");
+message.style.fontWeight = "bold";
+const playersName = [];
+let count = 1;
 
-function startGame() {
-    player1 = document.getElementById('player-1').value;
-    player2 = document.getElementById('player-2').value;
-    if (player1 && player2) {
-        document.getElementById('name-input').style.display = 'none';
-        document.getElementById('game-board').style.display = 'block';
-        currentPlayer = player1;
-        updateMessage();
-        setupBoard();
-    }
+const grids = document.querySelectorAll(".grid");
+grids.forEach((e) => {
+  e.addEventListener("click", togglePlayerInput);
+});
+
+form.addEventListener("submit", toggleView);
+
+function toggleView(e) {
+  e.preventDefault();
+  form.style.display = "none";
+  gridsContainer.style.display = "grid";
+  playersName.push(form.playerA.value.trim());
+  playersName.push(form.playerB.value.trim());
+  togglePlayerName(e);
+  form.reset();
 }
 
-function setupBoard() {
-    const cells = document.querySelectorAll('.cell');
-    cells.forEach(cell => {
-        cell.addEventListener('click', handleCellClick);
+function togglePlayerName() {
+  if (count % 2 !== 0) {
+    message.innerText = `${playersName[0]}, you're up`;
+  } else {
+    message.innerText = `${playersName[1]}, you're up`;
+  }
+  count++;
+}
+
+function togglePlayerInput(e) {
+  if (e === "won") {
+    message.innerText = `${
+      count % 2 !== 0 ? playersName[1] : playersName[0]
+    } congratulations you won!`;
+    grids.forEach((e) => {
+      e.removeEventListener("click", togglePlayerInput);
     });
+    return;
+  }
+
+  if (count % 2 !== 0) {
+    e.target.innerText = "o";
+  } else {
+    e.target.innerText = "x";
+  }
+
+  let value = checkIfPlayerHasWon();
+  if (value !== undefined) {
+    playerWon(value);
+    return;
+  }
+
+  togglePlayerName();
 }
 
-function handleCellClick(e) {
-    const cellIndex = parseInt(e.target.id) - 1;
-    if (gameBoard[cellIndex] === '') {
-        gameBoard[cellIndex] = currentPlayer === player1 ? 'X' : 'O';
-        e.target.textContent = gameBoard[cellIndex];
-        if (checkWin()) {
-            updateMessage(`${currentPlayer} congratulations you won!`);
-            endGame();
-        } else if (gameBoard.every(cell => cell !== '')) {
-            updateMessage("It's a draw!");
-            endGame();
-        } else {
-            currentPlayer = currentPlayer === player1 ? player2 : player1;
-            updateMessage();
-        }
-    }
+function checkIfPlayerHasWon() {
+  if (
+    grids[0].innerText === grids[1].innerText &&
+    grids[1].innerText === grids[2].innerText &&
+    grids[0].innerText !== ""
+  ) {
+    return [0, 1, 2];
+  } else if (
+    grids[3].innerText === grids[4].innerText &&
+    grids[4].innerText === grids[5].innerText &&
+    grids[3].innerText !== ""
+  ) {
+    return [3, 4, 5];
+  } else if (
+    grids[6].innerText === grids[7].innerText &&
+    grids[7].innerText === grids[8].innerText &&
+    grids[6].innerText !== ""
+  ) {
+    return [6, 7, 8];
+  } else if (
+    grids[0].innerText === grids[3].innerText &&
+    grids[3].innerText === grids[6].innerText &&
+    grids[0].innerText !== ""
+  ) {
+    return [0, 3, 6];
+  } else if (
+    grids[1].innerText === grids[4].innerText &&
+    grids[4].innerText === grids[7].innerText &&
+    grids[1].innerText !== ""
+  ) {
+    return [1, 4, 7];
+  } else if (
+    grids[2].innerText === grids[5].innerText &&
+    grids[5].innerText === grids[8].innerText &&
+    grids[2].innerText !== ""
+  ) {
+    return [2, 5, 8];
+  } else if (
+    grids[0].innerText === grids[4].innerText &&
+    grids[4].innerText === grids[8].innerText &&
+    grids[0].innerText !== ""
+  ) {
+    return [0, 4, 8];
+  } else if (
+    grids[2].innerText === grids[4].innerText &&
+    grids[4].innerText === grids[6].innerText &&
+    grids[2].innerText !== ""
+  ) {
+    return [2, 4, 6];
+  }
 }
 
-function checkWin() {
-    return winCombos.some(combo => {
-        return combo.every(index => {
-            return gameBoard[index] === (currentPlayer === player1 ? 'X' : 'O');
-        });
-    });
-}
+function playerWon(value) {
+  value.forEach((e) => {
+    grids[e].style.backgroundColor = "rgb(128,0,128)";
+  });
 
-function updateMessage(message) {
-    const messageDiv = document.querySelector('.message');
-    messageDiv.textContent = message || `${currentPlayer}, you're up`;
-}
-
-function endGame() {
-    const cells = document.querySelectorAll('.cell');
-    cells.forEach(cell => {
-        cell.removeEventListener('click', handleCellClick);
-    });
+  togglePlayerInput("won");
 }
